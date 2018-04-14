@@ -467,14 +467,14 @@ class aldrapay
         $this->_install_query('ZONE', '0', 3, 'tep_cfg_pull_down_zone_classes(', 'tep_get_zone_class_title');
 
         // gateway access parameters
-        $this->_install_query('MERCHANT_ID', '123', 4);
-        $this->_install_query('PASS_CODE', 'abcdefghij', 5);
+        $this->_install_query('MERCHANT_ID', 'YOUR_MERCHANT_ID_HERE', 4);
+        $this->_install_query('PASS_CODE', 'YOUR_MERCHANT_PASS_CODE_HERE', 5);
         $this->_install_query('PSIGN_ALGO', 'sha1', 6, 'aldrapay_cfg_draw_pull_down_psign_algos(', 'aldrapay_get_psign_algo_title');
         $this->_install_query('CTX_MODE', 'TEST', 7, "tep_cfg_select_option(array(\'TEST\', \'PRODUCTION\'),");
         $this->_install_query('PLATFORM_URL', 'https://secure.aldrapay.com/', 8);
 
-        $this->_install_query('AMOUNT_MIN', '', 9);
-        $this->_install_query('AMOUNT_MAX', '', 10);
+        $this->_install_query('AMOUNT_MIN', '1', 9);
+        $this->_install_query('AMOUNT_MAX', '9999', 10);
 
         // gateway return parameters
         $this->_install_query('ORDER_STATUS', '2', 11, 'tep_cfg_pull_down_order_statuses(', 'tep_get_order_status_name');
