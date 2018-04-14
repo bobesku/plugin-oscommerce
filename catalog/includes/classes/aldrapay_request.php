@@ -214,7 +214,7 @@ if (! class_exists('AldrapayRequest', false)) {
         /**
          * Return the list of fields to send to the payment platform.
          *
-         * @return array[string][PayzenField] a list of PayzenField
+         * @return array[string][AldrapayField] a list of AldrapayField
          */
         public function getRequestFields()
         {
