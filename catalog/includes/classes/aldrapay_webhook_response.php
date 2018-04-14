@@ -34,7 +34,7 @@ if (! class_exists('AldrapayWebhookResponse', false)) {
 		private $pSignAlgo;
 		private $passCode;
 	
-		public function __construct($passCode, $pSignAlgo='sha1') {
+		public function __construct($passCode='', $pSignAlgo='sha1') {
 			 
 			$this->pSignAlgo = $pSignAlgo;
 			$this->passCode = $passCode;
@@ -71,12 +71,13 @@ if (! class_exists('AldrapayWebhookResponse', false)) {
 			return $this->getPSign();
 		}
 		
-		public function unsetPSign(){
+		public function unsetParameter($paramName){
 		
-			if (isset($this->getResponse()->pSign)){
-				$response = clone $this->_response;
-				unset($response->pSign);
-				$this->__setResponse($response);
+			if (isset($this->_response->$paramName)){
+				unset($this->_response->$paramName);
+			}
+			if (isset($this->_responseArray[$paramName])){
+				unset($this->_responseArray[$paramName]);
 			}
 		}
 	

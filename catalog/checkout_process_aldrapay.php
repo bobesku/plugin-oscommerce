@@ -40,19 +40,15 @@
             constant($paymentObject->prefix . 'PSIGN_ALGO')
     );
 
-    error_log('WebHook RESPONSE -> ' . print_r($aldrapay_response->getResponse(), true));
-    
     // check authenticity and valid data
 	if (!$aldrapay_response->isAuthorized() || !$aldrapay_response->isValid() || empty($aldrapay_response->getUid())) {
         $messageStack->add_session('header', MODULE_PAYMENT_ALDRAPAY_TECHNICAL_ERROR, 'error');
 
         tep_redirect(tep_href_link(FILENAME_CHECKOUT_PAYMENT, '', 'SSL', true));
     }
-//     else 
-//     	$aldrapay_response->unsetPSign();
     
-    error_log('WebHook RESPONSE (post unset) -> ' . print_r($aldrapay_response->getResponse(), true));
-    
+    // keep track of originating source (app needs to know further if this is a gateway notification or not) 
+    $_COOKIE['__call_from_server__'] = 'no';
 
     if ($paymentObject->_is_order_paid()) {
         // messages to display on payment result page

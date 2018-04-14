@@ -75,7 +75,7 @@ define('MODULE_PAYMENT_ALDRAPAY_LANGUAGE_ENGLISH', "English");
 define('MODULE_PAYMENT_ALDRAPAY_TECHNICAL_ERROR', "An error occured in the payment process.");
 define('MODULE_PAYMENT_ALDRAPAY_PAYMENT_ERROR', "Your order has not been confirmed. The payment has not been accepted.");
 define('MODULE_PAYMENT_ALDRAPAY_CHECK_URL_WARN', "The automatic notification has not worked. Please contact Aldrapay team in order to fix this problem.");
-define('MODULE_PAYMENT_ALDRAPAY_CHECK_URL_WARN_DETAIL', "The automatic notifications (also called IPNs) are direct messages from Aldrapay system sent to your server which are keeping your system up-to-date with all transactions states and changes.");
+define('MODULE_PAYMENT_ALDRAPAY_CHECK_URL_WARN_DETAIL', "The automatic notifications (also called IPNs) are messages from Aldrapay system sent directly to your server. These are keeping your system up-to-date with all transactions states and changes regardless of your customers connections (browsers may fail to return due to external factors out of our control).");
 define('MODULE_PAYMENT_ALDRAPAY_GOING_INTO_PROD_INFO', "<b>GOING INTO PRODUCTION :</b> At this time your account is in Test Mode. Please contact Aldrapay representatives for LIVE account enrollment and credentials.");
 
 // single payment catalog messages

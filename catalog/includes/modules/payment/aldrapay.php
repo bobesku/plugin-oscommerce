@@ -239,9 +239,15 @@ class aldrapay
 		if ($amount > 0)
 			$amount = $amount / 100;
 		
-		$orderId = $this->_guess_order_id();
-		$orderId = 'T'.str_pad(''.$orderId, 8, '0', STR_PAD_LEFT).'-'.time();
+		$osCsid = isset($_COOKIE['osCsid']) ? $_COOKIE['osCsid']: null;
+		$osCsid = $osCsid == null ? (isset($_POST['osCsid']) ? $_POST['osCsid']: null) : $osCsid;
+		$osCsid = $osCsid == null ? (isset($_GET['osCsid']) ? $_GET['osCsid']: null) : $osCsid;
 			
+		$osCsidStr = '-'.$osCsid;
+		
+		$orderId = $this->_guess_order_id();
+		$orderId = 'T'.str_pad(''.$orderId, 8, '0', STR_PAD_LEFT).'-'.time().$osCsidStr;
+		
         // get the Merchant pass_code (secret key) and hash algorithm
         $secretKey = constant($this->prefix . 'PASS_CODE');
         $pSignAlgo = constant($this->prefix . 'PSIGN_ALGO');
@@ -252,7 +258,7 @@ class aldrapay
             'amount' => $total,
             'currency' => $aldrapayCurrency->getAlpha3(),
             'orderID' => $orderId,
-            'returnURL' => HTTP_SERVER . DIR_WS_CATALOG . 'checkout_process_aldrapay.php',
+            'returnURL' => HTTP_SERVER . DIR_WS_CATALOG . 'checkout_process_aldrapay_disabled.php',
             'notifyURL' => HTTP_SERVER . DIR_WS_CATALOG . 'ipn_process_aldrapay.php',
             'customerEmail' => $order->customer['email_address'],
             'customerPhone' => $order->customer['telephone'], // no cell phone defined, just use customer phone
@@ -280,21 +286,22 @@ class aldrapay
     {
         global $order, $aldrapay_response, $messageStack;
 
-        error_log('###DBG### f() before_process');
-        
         require_once (DIR_FS_CATALOG . 'includes/classes/aldrapay_webhook_response.php');
         $aldrapay_response = new AldrapayWebhookResponse(
             constant($this->prefix . 'PASS_CODE'),
             constant($this->prefix . 'PSIGN_ALGO')
         );
         
+        //remove/clear session added param `osCsid` in order to validate the remote call params with pSign
+        if (isset($aldrapay_response->getResponse()->osCsid)) 
+        	$response = $aldrapay_response->unsetParameter('osCsid');
         
-        $fromServer = false; //$aldrapay_response->getPSign() != null;
+        $fromServer = isset($_COOKIE['__call_from_server__']) && $_COOKIE['__call_from_server__'] == 'yes' ? true :  false ;
 
          // check authenticity and valid data
 		if (!$aldrapay_response->isAuthorized() || !$aldrapay_response->isValid() || empty($aldrapay_response->getUid())) {
             if ($fromServer) {
-                die($this->getOutputForPlatform('auth_fail'));
+                die($this->getOutputForPlatform());
             } else {
                 $messageStack->add_session('header', MODULE_PAYMENT_ALDRAPAY_TECHNICAL_ERROR, 'error');
 
@@ -311,10 +318,10 @@ class aldrapay
         // act according to case
         if ($aldrapay_response->isSuccess()) {
             // successful payment
-
+	        
             if ($this->_is_order_paid()) {
                 if ($fromServer) {
-                    die ($this->getOutputForPlatform('payment_ok_already_done'));
+                    die ($this->getOutputForPlatform());
                 } else {
                     tep_redirect(tep_href_link(FILENAME_CHECKOUT_SUCCESS, '', 'SSL', true));
                     die();
@@ -330,7 +337,7 @@ class aldrapay
         } else {
             // payment process failed
             if ($fromServer) {
-                die($this->getOutputForPlatform('payment_ko'));
+                die($this->getOutputForPlatform());
             } else {
                 $messageStack->add_session('header', MODULE_PAYMENT_ALDRAPAY_PAYMENT_ERROR, 'error');
                 tep_redirect(tep_href_link(FILENAME_CHECKOUT_PAYMENT, '', 'SSL'));
@@ -346,16 +353,14 @@ class aldrapay
     {
         global $cart, $aldrapay_response, $messageStack;
 
-        error_log('###DBG### f() after_process');
-        
         // this function is called only when payment was successful and the order is not registered yet
 
-        $fromServer = false; //$aldrapay_response->getPSign() != null;
+        $fromServer = isset($_COOKIE['__call_from_server__']) && $_COOKIE['__call_from_server__'] == 'yes' ? true :  false ;
 
         if ($fromServer) {
             $this->_clear_session_vars();
 
-            die ($this->getOutputForPlatform('payment_ok'));
+            die ($this->getOutputForPlatform());
         } else {
             // payment confirmed by client retun, show a warning if TEST mode
             if (constant($this->prefix . 'CTX_MODE') == 'TEST') {
@@ -371,48 +376,12 @@ class aldrapay
     
     
     /**
-     * Return a formatted string to output as a response to the notification URL call.
-     *
-     * @param string $case shortcut code for current situations. Most useful : payment_ok, payment_ko, auth_fail
-     * @param string $extra_message some extra information to output to the payment platform
-     * @param string $original_encoding some extra information to output to the payment platform
-     * @return string
+     * Aldrapay Gateway Requires an HTTP 200 Status to be returned, regardless of content.
      */
-    public function getOutputForPlatform($case = '', $extra_message = '', $trans_id='n/a')
+    public function getOutputForPlatform()
     {
-    	// predefined response messages according to case
-    	$cases = array(
-    			'payment_ok' => array(true, 'Payment successful'),
-    			'payment_ko' => array(true, 'Payment failed'),
-    			'payment_ok_already_done' => array(true, 'Payment successful, already registered'),
-    			'payment_ko_already_done' => array(true, 'Payment failed, already registered'),
-    			'order_not_found' => array(false, 'Payment reference could not be found'),
-    			'payment_ko_on_order_ok' => array(false, 'Invalid payment code received for an order already validated'),
-    			'auth_fail' => array(false, 'Authentication failure'),
-    			'empty_cart' => array(false, 'Shop cart has been deleted before payment'),
-    			'unknown_status' => array(false, 'Unknown status'),
-    			'amount_error' => array(false, 'Amount paied is different than the initial amount'),
-    			'ok' => array(true, ''),
-    			'ko' => array(false, '')
-    	);
-    
-    	$success = key_exists($case, $cases) ? $cases[$case][0] : false;
-    	$message = key_exists($case, $cases) ? $cases[$case][1] : '';
-    
-    	if (! empty($extra_message)) {
-    		$message .= ' ' . $extra_message;
-    	}
-    	$message = str_replace("\n", ' ', $message);
-    
-    	$content = $success ? 'OK-' : 'KO-';
-    	$content .= $trans_id;
-    	$content .= "$message\n";
-    
-    	$response = '';
-    	$response .= '<span style="display:none">';
-    	$response .= htmlspecialchars($content, ENT_COMPAT, 'UTF-8');
-    	$response .= '</span>';
-    	return $response;
+    	echo 'OK';
+    	exit();
     }
     
     
