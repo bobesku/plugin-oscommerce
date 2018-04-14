@@ -1,6 +1,6 @@
-# Contributing to PayZen for osCommerce
+# Contributing to Aldrapay for osCommerce
 
-Anyone is welcome to contribute to PayZen payment plugin for osCommerce. There are various ways you can contribute:
+Anyone is welcome to contribute to Aldrapay payment plugin for osCommerce. There are various ways you can contribute:
 
 - Raise an issue on GitHub.
 - Send us a Pull Request with your bug fixes.

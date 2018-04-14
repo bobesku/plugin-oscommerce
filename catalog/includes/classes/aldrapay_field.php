@@ -1,6 +1,6 @@
 <?php
 /**
- * PayZen V2-Payment Module version 1.2.0 for osCommerce 2.3.x. Support contact : support@payzen.eu.
+ * Aldrapay Payment Module version 1.1.0 for osCommerce 2.3.x. Support contact : support@aldrapay.com
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -14,21 +14,20 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
- * @author    Lyra Network (http://www.lyra-network.com/)
- * @copyright 2014-2017 Lyra Network and contributors
+ * @author    Aldrapay (https://www.aldrapay.com/)
+ * @copyright 2014-2018 Aldrapay
  * @license   http://www.gnu.org/licenses/old-licenses/gpl-2.0.html  GNU General Public License (GPL v2)
  * @category  payment
- * @package   payzen
+ * @package   aldrapay
  */
 
-if (! class_exists('PayzenField', false)) {
+if (! class_exists('AldrapayField', false)) {
 
     /**
      * Class representing a form field to send to the payment platform.
      */
-    class PayzenField
+    class AldrapayField
     {
 
         /**
@@ -39,34 +38,6 @@ if (! class_exists('PayzenField', false)) {
          */
         private $name;
 
-        /**
-         * field label in English, may be used by translation systems.
-         *
-         * @var string
-         */
-        private $label;
-
-        /**
-         * field length.
-         * Matches the HTML input size attribute.
-         *
-         * @var int
-         */
-        private $length;
-
-        /**
-         * PCRE regular expression the field value must match.
-         *
-         * @var string
-         */
-        private $regex;
-
-        /**
-         * Whether the form requires the field to be set (even to an empty string).
-         *
-         * @var boolean
-         */
-        private $required;
 
         /**
          * field value.
@@ -85,32 +56,11 @@ if (! class_exists('PayzenField', false)) {
          * @param boolean $required
          * @param int length
          */
-        public function __construct($name, $label, $regex, $required = false, $length = 255)
+        public function __construct($name)
         {
             $this->name = $name;
-            $this->label = $label;
-            $this->regex = $regex;
-            $this->required = $required;
-            $this->length = $length;
         }
 
-        /**
-         * Checks the current value.
-         *
-         * @return boolean
-         */
-        public function isValid()
-        {
-            if ($this->value === null && $this->required) {
-                return false;
-            }
-
-            if ($this->value !== null && !preg_match($this->regex, $this->value)) {
-                return false;
-            }
-
-            return true;
-        }
 
         /**
          * Setter for value.
@@ -123,8 +73,7 @@ if (! class_exists('PayzenField', false)) {
             $value = ($value === null) ? null : (string) $value;
             // we save value even if invalid but we return "false" as warning
             $this->value = $value;
-
-            return $this->isValid();
+            return true;
         }
 
         /**
@@ -137,15 +86,6 @@ if (! class_exists('PayzenField', false)) {
             return $this->value;
         }
 
-        /**
-         * Is the field required in the payment request ?
-         *
-         * @return boolean
-         */
-        public function isRequired()
-        {
-            return $this->required;
-        }
 
         /**
          * Return the name (HTML attribute) of the field.
@@ -157,25 +97,6 @@ if (! class_exists('PayzenField', false)) {
             return $this->name;
         }
 
-        /**
-         * Return the english human-readable name of the field.
-         *
-         * @return string
-         */
-        public function getLabel()
-        {
-            return $this->label;
-        }
-
-        /**
-         * Return the length of the field value.
-         *
-         * @return int
-         */
-        public function getLength()
-        {
-            return $this->length;
-        }
 
         /**
          * Has a value been set ?

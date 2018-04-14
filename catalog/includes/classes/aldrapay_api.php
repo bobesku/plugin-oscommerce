@@ -1,6 +1,6 @@
 <?php
 /**
- * PayZen V2-Payment Module version 1.2.0 for osCommerce 2.3.x. Support contact : support@payzen.eu.
+ * Aldrapay Payment Module version 1.1.0 for osCommerce 2.3.x. Support contact : support@aldrapay.com
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -14,24 +14,23 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  *
- * @author    Lyra Network (http://www.lyra-network.com/)
- * @copyright 2014-2017 Lyra Network and contributors
+ * @author    Aldrapay (https://www.aldrapay.com/)
+ * @copyright 2014-2018 Aldrapay
  * @license   http://www.gnu.org/licenses/old-licenses/gpl-2.0.html  GNU General Public License (GPL v2)
  * @category  payment
- * @package   payzen
+ * @package   aldrapay
  */
 
-require_once 'payzen_currency.php';
-require_once 'payzen_field.php';
+require_once 'aldrapay_currency.php';
+require_once 'aldrapay_field.php';
 
-if (! class_exists('PayzenApi', false)) {
+if (! class_exists('AldrapayApi', false)) {
 
     /**
      * Utility class for managing parameters checking, inetrnationalization, signature building and more.
      */
-    class PayzenApi
+    class AldrapayApi
     {
 
         /**
@@ -71,16 +70,17 @@ if (! class_exists('PayzenApi', false)) {
         }
 
         /**
-         * Returns an array of languages accepted by the PayZen payment platform.
+         * Returns an array of languages accepted by the Aldrapay payment platform.
          *
          * @return array[string][string]
          */
         public static function getSupportedLanguages()
         {
             return array(
-                'de' => 'German', 'en' => 'English', 'zh' => 'Chinese', 'es' => 'Spanish', 'fr' => 'French',
+            	'en' => 'English',
+                /* 'de' => 'German','zh' => 'Chinese', 'es' => 'Spanish', 'fr' => 'French',
                 'it' => 'Italian', 'ja' => 'Japanese', 'nl' => 'Dutch', 'pl' => 'Polish', 'pt' => 'Portuguese',
-                'ru' => 'Russian', 'sv' => 'Swedish', 'tr' => 'Turkish'
+                'ru' => 'Russian', 'sv' => 'Swedish', 'tr' => 'Turkish' */
             );
         }
 
@@ -102,9 +102,9 @@ if (! class_exists('PayzenApi', false)) {
         }
 
         /**
-         * Return the list of currencies recognized by the PayZen platform.
+         * Return the list of currencies recognized by the Aldrapay platform.
          *
-         * @return array[int][PayzenCurrency]
+         * @return array[int][AldrapayCurrency]
          */
         public static function getSupportedCurrencies()
         {
@@ -121,27 +121,27 @@ if (! class_exists('PayzenApi', false)) {
                 array('PLN', '985', 2), array('BRL', '986', 2)
             );
 
-            $payzen_currencies = array();
+            $aldrapay_currencies = array();
 
             foreach ($currencies as $currency) {
-                $payzen_currencies[] = new PayzenCurrency($currency[0], $currency[1], $currency[2]);
+                $aldrapay_currencies[] = new AldrapayCurrency($currency[0], $currency[1], $currency[2]);
             }
 
-            return $payzen_currencies;
+            return $aldrapay_currencies;
         }
 
         /**
          * Return a currency from its 3-letters ISO code.
          *
          * @param string $alpha3
-         * @return PayzenCurrency
+         * @return AldrapayCurrency
          */
         public static function findCurrencyByAlphaCode($alpha3)
         {
             $list = self::getSupportedCurrencies();
             foreach ($list as $currency) {
                 /**
-                 * @var PayzenCurrency $currency
+                 * @var AldrapayCurrency $currency
                  */
                 if ($currency->getAlpha3() == $alpha3) {
                     return $currency;
@@ -155,14 +155,14 @@ if (! class_exists('PayzenApi', false)) {
          * Returns a currency form its numeric ISO code.
          *
          * @param int $numeric
-         * @return PayzenCurrency
+         * @return AldrapayCurrency
          */
         public static function findCurrencyByNumCode($numeric)
         {
             $list = self::getSupportedCurrencies();
             foreach ($list as $currency) {
                 /**
-                 * @var PayzenCurrency $currency
+                 * @var AldrapayCurrency $currency
                  */
                 if ($currency->getNum() == $numeric) {
                     return $currency;
@@ -176,14 +176,14 @@ if (! class_exists('PayzenApi', false)) {
          * Return a currency from its 3-letters or numeric ISO code.
          *
          * @param string $code
-         * @return PayzenCurrency
+         * @return AldrapayCurrency
          */
         public static function findCurrency($code)
         {
             $list = self::getSupportedCurrencies();
             foreach ($list as $currency) {
                 /**
-                 * @var PayzenCurrency $currency
+                 * @var AldrapayCurrency $currency
                  */
                 if ($currency->getNum() == $code || $currency->getAlpha3() == $code) {
                     return $currency;
@@ -202,11 +202,11 @@ if (! class_exists('PayzenApi', false)) {
         public static function getCurrencyNumCode($alpha3)
         {
             $currency = self::findCurrencyByAlphaCode($alpha3);
-            return ($currency instanceof PayzenCurrency) ? $currency->getNum() : null;
+            return ($currency instanceof AldrapayCurrency) ? $currency->getNum() : null;
         }
 
         /**
-         * Returns an array of card types accepted by the PayZen payment platform.
+         * Returns an array of card types accepted by the Aldrapay payment platform.
          *
          * @return array[string][string]
          */
@@ -239,9 +239,27 @@ if (! class_exists('PayzenApi', false)) {
                 'VILLAVERDE_SB' => 'Carte cadeau Villaverde - SandBox'
             );
         }
+        
+        
+        /**
+         * Returns an array of Hashing Algorithms used for payment protocol signing (pSign)
+         *
+         * @return array[string][string]
+         */
+        public static function getAvailablePsignAlgorithms()
+        {
+        	return array(
+        			'sha1' => 'SHA-1 (160 bits)',
+        			'sha224' => 'SHA-2 (224 bits)',
+        			'sha256' => 'SHA-2 (256 bits)',
+        			'sha384' => 'SHA-2 (384 bits)',
+        			'sha512' => 'SHA-2 (521 bits)'
+        	);
+        }
+        
 
         /**
-         * Compute a PayZen signature. Parameters must be in UTF-8.
+         * Compute a Aldrapay signature. Parameters must be in UTF-8.
          *
          * @param array[string][string] $parameters payment platform request/response parameters
          * @param string $key shop certificate
